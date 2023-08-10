@@ -183,7 +183,7 @@ if __name__ == '__main__':
 
     def add_max_limit(name, value):
         add_rq('{} <= {}'.format(name, value),
-               lambda info: int(info.limits[name], 0) <= value)
+               lambda info: int(info.limits[name]) <= value)
 
     def add_bits_limit(name, bits):
         add_rq('{} has bits 0b{:b}'.format(name, bits),
@@ -191,122 +191,9 @@ if __name__ == '__main__':
 
     # Known requirements
 
-    add_rq('API version variant is 0', lambda info: info.apiVariant == 0)
-    add_rq('API version is 1.x.x', lambda info: info.apiVersion[0] == 1)
+    add_rq('dualSrcBlend',
+           lambda info: 'dualSrcBlend' in info.features)
 
-    add_rq('robustBufferAccess',
-           lambda info: 'robustBufferAccess' in info.features)
-
-    add_rq('standardSampleLocations',
-           lambda info: info.limits['standardSampleLocations'] == 1)
-
-    add_min_limit('maxBoundDescriptorSets', 4)
-    add_min_limit('maxDescriptorSetUniformBuffersDynamic', 8)
-    add_min_limit('maxDescriptorSetStorageBuffersDynamic', 4)
-    add_min_limit('maxPerStageDescriptorSampledImages', 16)
-    add_min_limit('maxPerStageDescriptorSamplers', 16)
-    add_min_limit('maxPerStageDescriptorStorageBuffers', 8)
-    add_min_limit('maxPerStageDescriptorStorageImages', 4)
-    add_min_limit('maxPerStageDescriptorUniformBuffers', 12)
-
-    add_min_limit('maxUniformBufferRange', 65536)
-    add_min_limit('maxStorageBufferRange', 134217728)
-
-    add_max_limit('minUniformBufferOffsetAlignment', 256)
-    add_max_limit('minStorageBufferOffsetAlignment', 256)
-
-    add_min_limit('maxVertexInputBindings', 8)
-    add_min_limit('maxVertexInputAttributes', 16)
-    add_min_limit('maxVertexInputBindingStride', 2048)
-    add_min_limit('maxVertexInputAttributeOffset', 2047)
-
-    add_min_limit('maxVertexOutputComponents', 64)
-    add_min_limit('maxFragmentInputComponents', 64)
-    add_min_limit('maxComputeSharedMemorySize', 16384)
-    add_min_limit('maxComputeWorkGroupInvocations', 256)
-    add_rq('maxComputeWorkGroupSize >= [256,256,64]',
-           lambda info:
-           info.limits['maxComputeWorkGroupSize'][0] >= 256 and
-           info.limits['maxComputeWorkGroupSize'][1] >= 256 and
-           info.limits['maxComputeWorkGroupSize'][2] >= 64)
-    add_rq('maxComputeWorkGroupCount >= [65535,65535,65535]',
-           lambda info:
-           info.limits['maxComputeWorkGroupCount'][0] >= 65535 and
-           info.limits['maxComputeWorkGroupCount'][1] >= 65535 and
-           info.limits['maxComputeWorkGroupCount'][2] >= 65535)
-
-    add_min_limit('maxColorAttachments', 8)
-
-    add_min_limit('maxImageDimension2D', 8192)
-    add_min_limit('maxImageDimensionCube', 8192)
-    add_min_limit('maxFramebufferWidth', 8192)
-    add_min_limit('maxFramebufferHeight', 8192)
-    add_rq('maxViewportDimensions[0] >= 8192', lambda info: info.limits['maxViewportDimensions'][0] >= 8192)
-    add_rq('maxViewportDimensions[1] >= 8192', lambda info: info.limits['maxViewportDimensions'][1] >= 8192)
-    add_rq('viewportBoundsRange[0] <= -8192', lambda info: info.limits['viewportBoundsRange'][0] <= -8192)
-    add_rq('viewportBoundsRange[1] >= 8192', lambda info: info.limits['viewportBoundsRange'][1] >= 8192)
-    add_min_limit('maxImageDimension1D', 8192)
-    add_min_limit('maxImageDimension3D', 2048)
-    add_min_limit('maxImageArrayLayers', 256)
-
-    add_bits_limit('framebufferColorSampleCounts',
-                   vk.SampleCount._1 | vk.SampleCount._4)
-    add_bits_limit('framebufferDepthSampleCounts',
-                   vk.SampleCount._1 | vk.SampleCount._4)
-
-    add_rq('maxFragmentCombinedOutputResources >= 8',
-           lambda info: info.limits['maxFragmentCombinedOutputResources'] >= 8)
-
-    add_rq('fragmentStoresAndAtomics',
-           lambda info: 'fragmentStoresAndAtomics' in info.features)
-    add_rq('fullDrawIndexUint32',
-           lambda info: 'fullDrawIndexUint32' in info.features)
-    add_rq('depthBiasClamp', lambda info: 'depthBiasClamp' in info.features)
-    add_rq('imageCubeArray', lambda info: 'imageCubeArray' in info.features)
-    add_rq('independentBlend',
-           lambda info: 'independentBlend' in info.features)
-    add_rq('sampleRateShading',
-           lambda info: 'sampleRateShading' in info.features)
-
-    add_rq('has BC || (ETC2 && ASTC LDR 2D)',
-           lambda info: 'textureCompressionBC' in info.features or
-           ('textureCompressionETC2' in info.features and 'textureCompressionASTC_LDR' in info.features))
-
-    add_rq('viewport Y-flip: Vulkan 1.1 or VK_KHR_maintenance1 or VK_AMD_negative_viewport_height',
-           lambda info: info.apiVersion >= (1, 1, 0) or
-                        'VK_KHR_maintenance1' in info.extensions or
-                        'VK_AMD_negative_viewport_height' in info.extensions)
-
-    # Texture formats
-
-    ds_required_flags = vk.FormatFeature.SAMPLED_IMAGE | vk.FormatFeature.DEPTH_STENCIL_ATTACHMENT
-    add_rq('depth16unorm', lambda info: format_supported_with_optimal_tiling_features(
-        info.fmts, vk.Format.D16_UNORM, ds_required_flags))
-    add_rq('depth32float', lambda info: format_supported_with_optimal_tiling_features(
-        info.fmts, vk.Format.D32_SFLOAT, ds_required_flags))
-
-    def depth24plus(info):
-        return (format_supported_with_optimal_tiling_features(info.fmts, vk.Format.X8_D24_UNORM, ds_required_flags) or
-                format_supported_with_optimal_tiling_features(info.fmts, vk.Format.D32_SFLOAT, ds_required_flags))
-    add_rq('depth24plus', depth24plus)
-
-    def depth24plus_stencil8(info):
-        return (format_supported_with_optimal_tiling_features(info.fmts, vk.Format.D24_UNORM_S8_UINT, ds_required_flags) or
-                format_supported_with_optimal_tiling_features(info.fmts, vk.Format.D32_SFLOAT_S8_UINT, ds_required_flags))
-    add_rq('depth24plus-stencil8', depth24plus_stencil8)
-
-    def any_s8(info):
-        return (format_supported_with_optimal_tiling_features(info.fmts, vk.Format.D24_UNORM_S8_UINT, ds_required_flags) or
-                format_supported_with_optimal_tiling_features(info.fmts, vk.Format.D16_UNORM_S8_UINT, ds_required_flags) or
-                format_supported_with_optimal_tiling_features(info.fmts, vk.Format.D32_SFLOAT_S8_UINT, ds_required_flags) or
-                format_supported_with_optimal_tiling_features(info.fmts, vk.Format.S8_UINT, ds_required_flags))
-    add_rq('stencil8 any format', any_s8)
-
-    def d24s8_or_s8(info):
-        return (format_supported_with_optimal_tiling_features(info.fmts, vk.Format.D24_UNORM_S8_UINT, ds_required_flags) or
-                format_supported_with_optimal_tiling_features(info.fmts, vk.Format.S8_UINT, ds_required_flags))
-    add_rq('stencil8 <= 4 bytes', d24s8_or_s8)
-
-    # Additional requirements?
+    add_min_limit('maxFragmentDualSrcAttachments', 2)
 
     run(requirements)
