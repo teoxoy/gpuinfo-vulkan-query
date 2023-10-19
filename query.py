@@ -8,7 +8,7 @@ import time
 import re
 import sys
 import xml.etree.ElementTree as ET
-
+from math import prod
 
 class dotdict(dict):
     '''dot.notation access to dictionary attributes'''
@@ -48,6 +48,8 @@ def run(requirements, groups=[]):
         for fmt in report['formats']:
             m[fmt[0]] = fmt[1]
         return m
+
+    limit_data = list()
 
     deviceName_values = set()
     ids_by_deviceName = defaultdict(
@@ -121,10 +123,60 @@ def run(requirements, groups=[]):
             ids_by_deviceName[deviceName].unsupported.append(report_id)
         else:
             ids_by_deviceName[deviceName].supported.append(report_id)
-            total_supported += 1
-            for group in groups:
-                bucket = group.sort(info)
-                device_groups[group.name][bucket] += 1
+            # total_supported += 1
+            # for group in groups:
+            #     bucket = group.sort(info)
+            #     device_groups[group.name][bucket] += 1
+            limit_data.append((
+                (),(),
+                # report['properties']['vendorID'],
+                # report['properties']['deviceID'],
+                # report['properties']['driverVersion'],
+                (
+                info.limits['maxBoundDescriptorSets'],
+                info.limits['maxDescriptorSetUniformBuffersDynamic'],
+                info.limits['maxDescriptorSetStorageBuffersDynamic'],
+                info.limits['maxPerStageDescriptorSampledImages'],
+                info.limits['maxPerStageDescriptorSamplers'],
+                info.limits['maxPerStageDescriptorStorageBuffers'],
+                info.limits['maxPerStageDescriptorStorageImages'],
+                info.limits['maxPerStageDescriptorUniformBuffers'],
+                info.limits['maxUniformBufferRange'],
+                info.limits['maxStorageBufferRange'],
+                try_to_int(info.limits['minUniformBufferOffsetAlignment']),
+                try_to_int(info.limits['minStorageBufferOffsetAlignment']),
+                info.limits['maxVertexInputBindings'],
+                info.limits['maxVertexInputAttributes'],
+                info.limits['maxVertexInputBindingStride'],
+                info.limits['maxVertexInputAttributeOffset'],
+                min(info.limits['maxVertexOutputComponents'],
+                info.limits['maxFragmentInputComponents']),
+                min(info.limits['maxColorAttachments'],
+                info.limits['maxFragmentOutputAttachments'],
+                info.limits['maxFragmentCombinedOutputResources']),
+                info.limits['maxImageDimension1D'],
+                min(info.limits['maxImageDimension2D'],
+                info.limits['maxImageDimensionCube'],
+                info.limits['maxFramebufferWidth'],
+                info.limits['maxFramebufferHeight'],
+                info.limits['maxViewportDimensions'][0],
+                info.limits['maxViewportDimensions'][1],
+                -info.limits['viewportBoundsRange'][0],
+                info.limits['viewportBoundsRange'][1]),
+                info.limits['maxImageDimension3D'],
+                info.limits['maxImageArrayLayers'],
+                info.limits['maxComputeSharedMemorySize'],
+                min(info.limits['maxComputeWorkGroupInvocations'], prod(info.limits['maxComputeWorkGroupSize'])),
+                min(info.limits['maxComputeWorkGroupSize'][0], info.limits['maxComputeWorkGroupInvocations']),
+                min(info.limits['maxComputeWorkGroupSize'][1], info.limits['maxComputeWorkGroupInvocations']),
+                min(info.limits['maxComputeWorkGroupSize'][2], info.limits['maxComputeWorkGroupInvocations']),
+                min(info.limits['maxComputeWorkGroupCount'][0],
+                info.limits['maxComputeWorkGroupCount'][1],
+                info.limits['maxComputeWorkGroupCount'][2]),
+                # map_none_to(opt(info.properties, 'maxPerSetDescriptors'), 0),
+                # map_none_to(min_opt(opt(info.properties, 'maxMemoryAllocationSize'),
+                # opt(info.properties, 'maxBufferSize')), 0),
+            )))
 
         # if unsupported_because:
         #    print('{}: "{}" failed "{}"'.format(
@@ -193,6 +245,16 @@ def run(requirements, groups=[]):
     with open(result_filename, 'w') as f:
         f.write(result)
 
+    limit_data = frozenset(limit_data)
+    limit_data = sorted(limit_data, key=lambda x:(x[0],x[1],x[2]),reverse=True)
+    limit_data = "\n".join(list(map(lambda d: repr(d), limit_data)))
+    print(len(limit_data))
+
+    result_filename = 'result-{}-limits.txt'.format(time.strftime("%Y%m%d-%H%M%S"))
+    print('Result saved to {}'.format(result_filename))
+    with open(result_filename, 'w') as f:
+        f.write(limit_data)
+
 
 def format_supported_with_optimal_tiling_features(formats_map, format, flags):
     return format in formats_map and (formats_map[format]['optimalTilingFeatures'] & flags) == flags
@@ -201,6 +263,20 @@ def format_supported_with_optimal_tiling_features(formats_map, format, flags):
 def format_supported_with_linear_tiling_features(formats_map, format, flags):
     return format in formats_map and (formats_map[format]['linearTilingFeatures'] & flags) == flags
 
+def map_none_to(v, default):
+    if v is None:
+        return default
+    else:
+        return v
+
+def opt(obj, key):
+    if key in obj:
+        return int(obj[key])
+    else:
+        return None
+
+def min_opt(*values):
+    return min(filter(lambda x: x is not None, values), default=None)
 
 def try_to_int(value):
     if type(value) == str:
@@ -208,6 +284,10 @@ def try_to_int(value):
     else:
         return value
 
+# def test(info,name,value):
+#     if int(info.properties[name]) <= 1000:
+#         print(int(info.properties[name]))
+#     return int(info.properties[name]) >= value
 
 if __name__ == '__main__':
     vk = load_vk_enums()
