@@ -35,6 +35,15 @@ def load_vk_enums():
         # keep the leading underscore
         name = e.attrib['name'][len('VK_SAMPLE_COUNT'):-len('_BIT')]
         vk.SampleCount[name] = 1 << int(e.attrib['bitpos'])
+    vk.ShaderStage = dotdict()
+    for e in root.findall("./enums[@name='VkShaderStageFlagBits']/*"):
+        name = e.attrib['name'][len('VK_SHADER_STAGE_'):-len('_BIT')]
+        if 'bitpos' in e.attrib:
+            vk.ShaderStage[name] = 1 << int(e.attrib['bitpos'])
+    vk.SubgroupFeature = dotdict()
+    for e in root.findall("./enums[@name='VkSubgroupFeatureFlagBits']/*"):
+        name = e.attrib['name'][len('VK_SUBGROUP_FEATURE_'):-len('_BIT')]
+        vk.SubgroupFeature[name] = 1 << int(e.attrib['bitpos'])
     return vk
 
 
@@ -102,6 +111,17 @@ def run(requirements, groups=[]):
         if 'extended' in report and 'deviceproperties2' in report['extended']:
             for v in report['extended']['deviceproperties2']:
                 info.properties[v['name']] = v['value']
+
+        info.subgroupProperties = dotdict({
+            'supportedStages': 0,
+            'supportedOperations': 0
+        })
+        if info.apiVersion >= (1, 2, 0) and 'core11' in report:
+            info.subgroupProperties.supportedStages = report['core11']['properties']['subgroupSupportedStages']
+            info.subgroupProperties.supportedOperations = report['core11']['properties']['subgroupSupportedOperations']
+        elif info.apiVersion >= (1, 1, 0) and 'subgroupProperties' in report['properties'] and report['properties']['subgroupProperties']:
+            info.subgroupProperties.supportedStages = report['properties']['subgroupProperties']['supportedStages']
+            info.subgroupProperties.supportedOperations = report['properties']['subgroupProperties']['supportedOperations']
 
         # +  ' ' + report['properties']['driverVersionText']
         deviceName = report['properties']['deviceName']
@@ -193,6 +213,8 @@ def run(requirements, groups=[]):
     with open(result_filename, 'w') as f:
         f.write(result)
 
+def has_flags(flags, mask):
+    return (flags & mask) == mask
 
 def format_supported_with_optimal_tiling_features(formats_map, format, flags):
     return format in formats_map and (formats_map[format]['optimalTilingFeatures'] & flags) == flags
@@ -374,6 +396,41 @@ if __name__ == '__main__':
     add_min_opt_property('maxBufferSize', 268435456)
 
     # Additional requirements?
+
+    add_rq('Vulkan 1.1', lambda info: info.apiVersion >= (1, 1, 0))
+    add_rq('subgroupSizeControl from Vulkan 1.3 or VK_EXT_subgroup_size_control', lambda info:
+        'subgroupSizeControl' in info.features)
+    add_rq('subgroupSupportedStages COMPUTE', lambda info:
+        has_flags(info.subgroupProperties.supportedStages, vk.ShaderStage.COMPUTE))
+    add_rq('subgroupSupportedStages FRAGMENT', lambda info:
+        has_flags(info.subgroupProperties.supportedStages, vk.ShaderStage.FRAGMENT))
+    # add_rq('subgroupSupportedStages VERTEX', lambda info:
+    #     has_flags(info.subgroupProperties.supportedStages, vk.ShaderStage.VERTEX))
+
+    add_rq('subgroupSupportedOperations BASIC', lambda info:
+        has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.BASIC))
+    add_rq('subgroupSupportedOperations VOTE', lambda info:
+        has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.VOTE))
+    add_rq('subgroupSupportedOperations BALLOT', lambda info:
+        has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.BALLOT))
+    add_rq('subgroupSupportedOperations SHUFFLE', lambda info:
+        has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.SHUFFLE))
+    add_rq('subgroupSupportedOperations SHUFFLE_RELATIVE', lambda info:
+        has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.SHUFFLE_RELATIVE))
+    add_rq('subgroupSupportedOperations QUAD', lambda info:
+        has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.QUAD))
+    add_rq('subgroupSupportedOperations ARITHMETIC', lambda info:
+        has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.ARITHMETIC))
+    # add_rq('subgroupSupportedOperations CLUSTERED', lambda info:
+    #     has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.CLUSTERED))
+
+    add_rq('f16', lambda info:
+        'shaderFloat16' in info.features and # from Vulkan 1.2 or VK_KHR_shader_float16_int8
+        'storageBuffer16BitAccess' in info.features and # from Vulkan 1.1 or VK_KHR_16bit_storage
+        'uniformAndStorageBuffer16BitAccess' in info.features) # from Vulkan 1.1 or VK_KHR_16bit_storage
+
+    add_rq('shaderSubgroupExtendedTypes from Vulkan 1.2 or VK_KHR_shader_subgroup_extended_types', lambda info:
+        'shaderSubgroupExtendedTypes' in info.features)
 
     # Grouping example:
     # Uncommenting the following lines would generate some basic stats on Android OS versions and GPUs
