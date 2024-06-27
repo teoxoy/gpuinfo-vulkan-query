@@ -262,11 +262,11 @@ if __name__ == '__main__':
     add_min_limit('maxDescriptorSetStorageBuffersDynamic', 4)
     add_min_limit('maxPerStageDescriptorSampledImages', 16)
     add_min_limit('maxPerStageDescriptorSamplers', 16)
-    add_min_limit('maxPerStageDescriptorStorageBuffers', 8)
+    add_min_limit('maxPerStageDescriptorStorageBuffers', 4)
     add_min_limit('maxPerStageDescriptorStorageImages', 4)
     add_min_limit('maxPerStageDescriptorUniformBuffers', 12)
 
-    add_min_limit('maxUniformBufferRange', 65536)
+    add_min_limit('maxUniformBufferRange', 16384)
     add_min_limit('maxStorageBufferRange', 134217728)
 
     add_max_limit('minUniformBufferOffsetAlignment', 256)
@@ -280,11 +280,11 @@ if __name__ == '__main__':
     add_min_limit('maxVertexOutputComponents', 68)
     add_min_limit('maxFragmentInputComponents', 68)
     add_min_limit('maxComputeSharedMemorySize', 16384)
-    add_min_limit('maxComputeWorkGroupInvocations', 256)
+    add_min_limit('maxComputeWorkGroupInvocations', 128)
     add_rq('maxComputeWorkGroupSize >= [256,256,64]',
            lambda info:
-           info.limits['maxComputeWorkGroupSize'][0] >= 256 and
-           info.limits['maxComputeWorkGroupSize'][1] >= 256 and
+           info.limits['maxComputeWorkGroupSize'][0] >= 128 and
+           info.limits['maxComputeWorkGroupSize'][1] >= 128 and
            info.limits['maxComputeWorkGroupSize'][2] >= 64)
     add_rq('maxComputeWorkGroupCount >= [65535,65535,65535]',
            lambda info:
@@ -292,12 +292,12 @@ if __name__ == '__main__':
            info.limits['maxComputeWorkGroupCount'][1] >= 65535 and
            info.limits['maxComputeWorkGroupCount'][2] >= 65535)
 
-    add_min_limit('maxColorAttachments', 8)
-    add_min_limit('maxFragmentOutputAttachments', 8)
+    add_min_limit('maxColorAttachments', 4)
+    add_min_limit('maxFragmentOutputAttachments', 4)
     # Most drivers report this limit incorrectly.
     # https://github.com/gpuweb/gpuweb/issues/3631#issuecomment-1498747606
-    add_rq('maxFragmentCombinedOutputResources >= 8+4+8, OR is intel/nvidia/amd/imgtec',
-           lambda info: info.limits['maxFragmentCombinedOutputResources'] >= 8 + 4 + 8 or
+    add_rq('maxFragmentCombinedOutputResources >= 4+4+4, OR is intel/nvidia/amd/imgtec',
+           lambda info: info.limits['maxFragmentCombinedOutputResources'] >= 4 + 4 + 4 or
            info.report['properties']['vendorID'] in [0x8086, 0x10de, 0x1002, 0x1010])
 
     add_min_limit('maxImageDimension2D', 8192)
