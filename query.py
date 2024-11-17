@@ -383,4 +383,43 @@ if __name__ == '__main__':
     # add_group("OS Version", lambda info: info.report['environment']['version'].split('.')[0])
     # add_substr_group("GPU", lambda info: info.report['properties']['deviceName'], ['Mali', 'Adreno', 'PowerVR', 'Tegra'])
 
+    renderable_required_flags = vk.FormatFeature.COLOR_ATTACHMENT | vk.FormatFeature.COLOR_ATTACHMENT_BLEND
+    add_rq('r8snorm', lambda info: format_supported_with_optimal_tiling_features(
+        info.fmts, vk.Format.R8_SNORM, renderable_required_flags))
+    add_rq('rg8snorm', lambda info: format_supported_with_optimal_tiling_features(
+        info.fmts, vk.Format.R8G8_SNORM, renderable_required_flags))
+    add_rq('rgba8snorm', lambda info: format_supported_with_optimal_tiling_features(
+        info.fmts, vk.Format.R8G8B8A8_SNORM, renderable_required_flags))
+    add_rq('rg11b10ufloat', lambda info: format_supported_with_optimal_tiling_features(
+        info.fmts, vk.Format.B10G11R11_UFLOAT_PACK32, renderable_required_flags))
+    add_rq('shaderStorageImageExtendedFormats',
+           lambda info: 'shaderStorageImageExtendedFormats' in info.features)
+
+    renderable_required_flags2 = vk.FormatFeature.COLOR_ATTACHMENT | vk.FormatFeature.COLOR_ATTACHMENT_BLEND | vk.FormatFeature.SAMPLED_IMAGE
+    add_rq('r16unorm', lambda info: format_supported_with_optimal_tiling_features(
+        info.fmts, vk.Format.R16_UNORM, renderable_required_flags2))
+    add_rq('r16snorm', lambda info: format_supported_with_optimal_tiling_features(
+        info.fmts, vk.Format.R16_SNORM, renderable_required_flags2))
+    add_rq('rg16unorm', lambda info: format_supported_with_optimal_tiling_features(
+        info.fmts, vk.Format.R16G16_UNORM, renderable_required_flags2))
+    add_rq('rg16snorm', lambda info: format_supported_with_optimal_tiling_features(
+        info.fmts, vk.Format.R16G16_SNORM, renderable_required_flags2))
+    add_rq('rgba16unorm', lambda info: format_supported_with_optimal_tiling_features(
+        info.fmts, vk.Format.R16G16B16A16_UNORM, renderable_required_flags2))
+    add_rq('rgba16snorm', lambda info: format_supported_with_optimal_tiling_features(
+        info.fmts, vk.Format.R16G16B16A16_SNORM, renderable_required_flags2))
+
+    # add_rq('filterable r16unorm', lambda info: format_supported_with_optimal_tiling_features(
+    #     info.fmts, vk.Format.R16_UNORM, vk.FormatFeature.COLOR_ATTACHMENT))
+    # add_rq('filterable r16snorm', lambda info: format_supported_with_optimal_tiling_features(
+    #     info.fmts, vk.Format.R16_SNORM, vk.FormatFeature.SAMPLED_IMAGE_FILTER_LINEAR))
+    # add_rq('filterable rg16unorm', lambda info: format_supported_with_optimal_tiling_features(
+    #     info.fmts, vk.Format.R16G16_UNORM, vk.FormatFeature.SAMPLED_IMAGE_FILTER_LINEAR))
+    # add_rq('filterable rg16snorm', lambda info: format_supported_with_optimal_tiling_features(
+    #     info.fmts, vk.Format.R16G16_SNORM, vk.FormatFeature.SAMPLED_IMAGE_FILTER_LINEAR))
+    # add_rq('filterable rgba16unorm', lambda info: format_supported_with_optimal_tiling_features(
+    #     info.fmts, vk.Format.R16G16B16A16_UNORM, vk.FormatFeature.SAMPLED_IMAGE_FILTER_LINEAR))
+    # add_rq('filterable rgba16snorm', lambda info: format_supported_with_optimal_tiling_features(
+    #     info.fmts, vk.Format.R16G16B16A16_SNORM, vk.FormatFeature.SAMPLED_IMAGE_FILTER_LINEAR))
+
     run(requirements, groups)
