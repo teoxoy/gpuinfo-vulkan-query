@@ -375,6 +375,78 @@ if __name__ == '__main__':
 
     # Additional requirements?
 
+    # add_rq('Vulkan 1.1', lambda info: info.apiVersion >= (1, 1, 0))
+    # add_rq('subgroupSizeControl from Vulkan 1.3 or VK_EXT_subgroup_size_control', lambda info:
+    #     'subgroupSizeControl' in info.features)
+    # add_rq('subgroupSupportedStages COMPUTE', lambda info:
+    #     has_flags(info.subgroupProperties.supportedStages, vk.ShaderStage.COMPUTE))
+    # add_rq('subgroupSupportedStages FRAGMENT', lambda info:
+    #     has_flags(info.subgroupProperties.supportedStages, vk.ShaderStage.FRAGMENT))
+    # # add_rq('subgroupSupportedStages VERTEX', lambda info:
+    # #     has_flags(info.subgroupProperties.supportedStages, vk.ShaderStage.VERTEX))
+
+    # add_rq('subgroupSupportedOperations BASIC', lambda info:
+    #     has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.BASIC))
+    # add_rq('subgroupSupportedOperations VOTE', lambda info:
+    #     has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.VOTE))
+    # add_rq('subgroupSupportedOperations BALLOT', lambda info:
+    #     has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.BALLOT))
+    # add_rq('subgroupSupportedOperations SHUFFLE', lambda info:
+    #     has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.SHUFFLE))
+    # add_rq('subgroupSupportedOperations SHUFFLE_RELATIVE', lambda info:
+    #     has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.SHUFFLE_RELATIVE))
+    # add_rq('subgroupSupportedOperations QUAD', lambda info:
+    #     has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.QUAD))
+    # add_rq('subgroupSupportedOperations ARITHMETIC', lambda info:
+    #     has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.ARITHMETIC))
+    # # add_rq('subgroupSupportedOperations CLUSTERED', lambda info:
+    # #     has_flags(info.subgroupProperties.supportedOperations, vk.SubgroupFeature.CLUSTERED))
+
+    # add_rq('f16', lambda info:
+    #     'shaderFloat16' in info.features and # from Vulkan 1.2 or VK_KHR_shader_float16_int8
+    #     'storageBuffer16BitAccess' in info.features and # from Vulkan 1.1 or VK_KHR_16bit_storage
+    #     'uniformAndStorageBuffer16BitAccess' in info.features) # from Vulkan 1.1 or VK_KHR_16bit_storage
+
+    # add_rq('shaderSubgroupExtendedTypes from Vulkan 1.2 or VK_KHR_shader_subgroup_extended_types', lambda info:
+    #     'shaderSubgroupExtendedTypes' in info.features)
+
+
+    # add_rq('OTHER', lambda info:
+    #        info.report['properties']['deviceType'] != 0)
+    # add_rq('DISCRETE_GPU', lambda info:
+    #        info.report['properties']['deviceType'] != 2)
+    # add_rq('VIRTUAL_GPU', lambda info:
+    #        info.report['properties']['deviceType'] != 3)
+    # add_rq('CPU', lambda info:
+    #        info.report['properties']['deviceType'] != 4)
+
+    # 20803 / 0x5143 Adreno (Qualcomm)
+    # 5045 / 0x13B5 Mali/Immortalis (Arm)
+    # 4112 / 0x1010 PowerVR (Imagination)
+    # 4318 / 0x10DE Tegra (Nvidia)
+    # 5197 / 0x144D Xclipse (Samsung)
+
+    add_rq('Android GPUs', lambda info:
+           info.report['properties']['vendorID'] in [0x5143, 0x13B5, 0x1010, 0x10DE, 0x144D]
+           and info.report['properties']['deviceType'] == 1)
+
+    # add_rq("Android", lambda info: info.report['environment']['name'] == "android")
+
+    # add_rq('Vulkan 1.2 or VK_KHR_driver_properties',
+    #        lambda info: info.apiVersion >= (1, 2, 0) or
+    #        'VK_KHR_driver_properties' in info.extensions)
+
+    # add_rq('Vulkan 1.1 or VK_KHR_storage_buffer_storage_class',
+    #        lambda info: info.apiVersion >= (1, 1, 0) or
+    #        'VK_KHR_storage_buffer_storage_class' in info.extensions)
+
+    # add_rq('Vulkan 1.3',
+    #        lambda info: info.apiVersion >= (1, 3, 0) or
+    #        'VK_EXT_shader_demote_to_helper_invocation' in info.extensions)
+
+    # add_rq('shaderDemoteToHelperInvocation from Vulkan 1.3 or VK_EXT_shader_demote_to_helper_invocation', lambda info:
+    #     'shaderDemoteToHelperInvocation' in info.features)
+
     # Grouping example:
     # Uncommenting the following lines would generate some basic stats on Android OS versions and GPUs
     # that meet all of the above criteria.
